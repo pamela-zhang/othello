@@ -28,7 +28,7 @@ Player::Player(Side playerSide) {
     {
 		for(int y = 0; y < 8; y++)
 		{
-			heu[x][y] = 0;
+			heu[x][y] = 1;
 		}
 	}
     heu[0][0] = std::numeric_limits<double>::infinity();
@@ -77,25 +77,6 @@ Player::~Player() {
 	delete[] heu;
 }
 
-/**
- * 
- */
-std::vector<Move*> Player::getLegalMoves() {
-    std::vector<Move*> moves;
-    
-    if(board->hasMoves(side)) {
-        for(int x = 0; x < 8; x++) {
-            for(int y = 0; y < 8; y++) {
-                Move *m = new Move(x, y);
-                if(board->checkMove(m, side))
-                    moves.push_back(m);
-            }
-        }
-    }
-    
-    return moves;
-}
-
 /*
  * Compute the next move given the opponent's last move. Your AI is
  * expected to keep track of the board on its own. If this is the first move,
@@ -117,7 +98,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     else
         board->doMove(opponentsMove, BLACK);
     
-    std::vector<Move*> moves = getLegalMoves();
+    std::vector<Move*> moves = getLegalMoves(side);
     
     if(moves.size() == 0)
         return nullptr;
@@ -129,12 +110,13 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     */
     
     //2nd task: make AI consistently beat SimplePlayer
+    /*
     if(side == BLACK)
         board->doMove(opponentsMove, WHITE);
     else
         board->doMove(opponentsMove, BLACK);
     
-    std::vector<Move*> moves = getLegalMoves();
+    std::vector<Move*> moves = getLegalMoves(side);
     
     if(moves.size() == 0)
         return nullptr;
@@ -146,4 +128,53 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	}
 	board->doMove(moves[max], side);
 	return moves[max];
+    */
+    
+    //3rd task: implement minimax algorithm
+    Side other = (side == BLACK) ? WHITE : BLACK;
+    board->doMove(opponentsMove, other);
+    
+    std::vector<Move*> moves = board->getLegalMoves(side);
+    
+    if(moves.size() == 0)
+        return nullptr;
+
+    std::vector<double> minScores;
+    
+    for(int i = 0; i < (int) moves.size(); i++)
+    {
+        // make move on a copy of the board
+        Board *boardCopy = board->copy();
+        boardCopy->doMove(moves[i], side);
+        
+        double min = 0;
+        double minScore = std::numeric_limits<double>::infinity();
+        // loop through opponent's possible moves
+        std::vector<Move*> opponentMoves = boardCopy->getLegalMoves(other);
+        for(int j = 0; j < (int) opponentMoves.size(); j++)
+        {
+            Board *boardCopy2 = boardCopy->copy();
+            boardCopy2->doMove(opponentMoves[j], other);
+            double score = boardCopy2->count(side) - boardCopy2->count(other);
+            //score *= heu[moves[i]->getX()][moves[i]->getY()];
+            
+            if(score <= minScore)
+            {
+                min = j;
+                minScore = score;
+            }
+        }
+        
+        minScores.push_back(minScore);
+	}
+    
+    int minimax = 0;
+    for(int i = 0; i < (int) minScores.size(); i++)
+    {
+        if(minScores[i] >= minScores[minimax])
+            minimax = i;
+    }
+    
+	board->doMove(moves[minimax], side);
+	return moves[minimax];
 }

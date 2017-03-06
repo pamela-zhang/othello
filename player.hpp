@@ -11,15 +11,14 @@ using namespace std;
 class Player {
 
 private:
-    Board *board;
     Side side;
     double **heu = new double *[8];
 
 public:
+    Board *board;
     Player(Side playerSide);
     ~Player();
 
-    std::vector<Move*> getLegalMoves();
     Move *doMove(Move *opponentsMove, int msLeft);
 
     // Flag to tell if the player is running within the test_minimax context

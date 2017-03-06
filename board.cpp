@@ -178,3 +178,22 @@ void Board::setBoard(char data[]) {
         }
     }
 }
+
+/**
+ * Returns a vector the legal moves for a given side.
+ */
+std::vector<Move*> Board::getLegalMoves(Side side) {
+    std::vector<Move*> moves;
+    
+    if(hasMoves(side)) {
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                Move *m = new Move(x, y);
+                if(checkMove(m, side))
+                    moves.push_back(m);
+            }
+        }
+    }
+    
+    return moves;
+}
