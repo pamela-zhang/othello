@@ -5,6 +5,7 @@
 #include <vector>
 #include "common.hpp"
 #include "board.hpp"
+#include <limits>
 using namespace std;
 
 class Player {
@@ -12,6 +13,7 @@ class Player {
 private:
     Board *board;
     Side side;
+    double **heu = new double *[8];
 
 public:
     Player(Side playerSide);
