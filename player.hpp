@@ -14,7 +14,7 @@ private:
     Side side;
 
 public:
-    Player(Side side);
+    Player(Side playerSide);
     ~Player();
 
     std::vector<Move*> getLegalMoves();

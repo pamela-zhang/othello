@@ -62,6 +62,11 @@ std::vector<Move*> Player::getLegalMoves() {
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
     std::vector<Move*> moves = getLegalMoves();
     
+    if(side == BLACK)
+        board->doMove(opponentsMove, WHITE);
+    else
+        board->doMove(opponentsMove, BLACK);
+    
     if(moves.size() == 0)
         return nullptr;
     
