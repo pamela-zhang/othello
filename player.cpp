@@ -10,21 +10,40 @@
  
 //small change
 
-Player::Player(Side side) {
+Player::Player(Side playerSide) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
 
-    /*
-     * TODO: Do any initialization you need to do here (setting up the board,
-     * precalculating things, etc.) However, remember that you will only have
-     * 30 seconds.
-     */
+    board = new Board();
+    side = playerSide;
 }
 
 /*
  * Destructor for the player.
  */
 Player::~Player() {
+    delete board;
+}
+
+/**
+ * 
+ */
+std::vector<Move*> Player::getLegalMoves() {
+    std::vector<Move*> moves;
+    
+    if(board->hasMoves(side)) {
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                if(!board->occupied(x, y)) {
+                    Move *m = new Move(x, y);
+                    if(board->checkMove(m, side))
+                        moves.push_back(m);
+                }
+            }
+        }
+    }
+    
+    return moves;
 }
 
 /*
@@ -41,9 +60,10 @@ Player::~Player() {
  * return nullptr.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
-    /*
-     * TODO: Implement how moves your AI should play here. You should first
-     * process the opponent's opponents move before calculating your own move
-     */
-    return nullptr;
+    std::vector<Move*> moves = getLegalMoves();
+    
+    if(moves.size() == 0)
+        return nullptr;
+    
+    return moves[rand() % moves.size()];
 }
