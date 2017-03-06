@@ -34,11 +34,9 @@ std::vector<Move*> Player::getLegalMoves() {
     if(board->hasMoves(side)) {
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
-                if(!board->occupied(x, y)) {
-                    Move *m = new Move(x, y);
-                    if(board->checkMove(m, side))
-                        moves.push_back(m);
-                }
+                Move *m = new Move(x, y);
+                if(board->checkMove(m, side))
+                    moves.push_back(m);
             }
         }
     }
@@ -70,5 +68,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     if(moves.size() == 0)
         return nullptr;
     
-    return moves[rand() % moves.size()];
+    int random = rand() % moves.size();
+    
+    board->doMove(moves[random], side);
+    return moves[random];
 }
