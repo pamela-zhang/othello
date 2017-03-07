@@ -30,6 +30,9 @@ int Player::heuristics(Board *board) {
     // basic score = difference in piece count
     score = board->count(side) - board->count(other);
     
+    if(testingMinimax)
+        return score;
+    
     // take into account the difference in corner piece count
     int sideCorners = 0, otherCorners = 0;
     for(int i = 0; i <= 7; i += 7) {
@@ -118,7 +121,6 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         Board *boardCopy = board->copy();
         boardCopy->doMove(moves[i], side);
         scores.push_back(score(boardCopy, 1));
-        //scores.push_back(heuristics(boardCopy));
     }
     
     // find the move that maximizes score
@@ -127,6 +129,14 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         if(scores[i] >= scores[max])
             max = i;
     }
+    
+    // PRINT MOVES & SCORES
+    /*
+    fprintf(stderr, "Possible moves:\n");
+    for(int i = 0; i < (int) moves.size(); i++)
+        fprintf(stderr, "(%i, %i): %i; ", moves[i]->getX(), moves[i]->getY(), scores[i]);
+    fprintf(stderr, "\nChose move (%i, %i)\n", moves[max]->getX(), moves[max]->getY());
+    */
     
     board->doMove(moves[max], side);
     return moves[max];
