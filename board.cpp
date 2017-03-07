@@ -180,7 +180,7 @@ void Board::setBoard(char data[]) {
 }
 
 /**
- * Returns a vector the legal moves for a given side.
+ * Returns a vector of the legal moves for a given side.
  */
 std::vector<Move*> Board::getLegalMoves(Side side) {
     std::vector<Move*> moves;

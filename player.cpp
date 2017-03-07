@@ -1,68 +1,17 @@
 #include "player.hpp"
-#include <limits>
-#include <iostream>
-
-// small change
 
 /*
  * Constructor for the player; initialize everything here. The side your AI is
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish
  * within 30 seconds.
  */
- 
-//small change
-
 Player::Player(Side playerSide) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
 
     board = new Board();
     side = playerSide;
-    
-    for(int i = 0; i < 8; i++)
-    {
-		heu[i] = new double[8];
-	}
-    
-    for(int x = 0; x < 8; x++)
-    {
-		for(int y = 0; y < 8; y++)
-		{
-			heu[x][y] = 1;
-		}
-	}
-    heu[0][0] = std::numeric_limits<double>::infinity();
-    heu[0][7] = std::numeric_limits<double>::infinity();
-    heu[7][7] = std::numeric_limits<double>::infinity();
-    heu[7][0] = std::numeric_limits<double>::infinity();
-    
-    heu[1][1] = (-1) * std::numeric_limits<double>::infinity();
-    heu[1][6] = (-1) * std::numeric_limits<double>::infinity();
-    heu[6][1] = (-1) * std::numeric_limits<double>::infinity();
-    heu[6][6] = (-1) * std::numeric_limits<double>::infinity();
-    heu[0][1] = -4;
-    heu[1][0] = -4;
-    heu[6][0] = -4;
-    heu[7][1] = -4;
-    heu[7][6] = -4;
-    heu[6][7] = -4;
-    heu[0][6] = -4;
-    heu[1][7] = -4;
-    
-    for(int x = 0; x < 8; x++)
-    {
-		for(int y = 0; y < 8; y++)
-		{
-			if((x == 0 || x == 7) && y >=2 && y <=5)
-			{
-				heu[x][y] = 4;
-			}
-			else if((y == 0 || y == 7) && x >=2 && x <=5)
-			{
-				heu[x][y] = 4;
-			}
-		}
-	}
+    other = (side == BLACK) ? WHITE : BLACK;
 }
 
 /*
@@ -70,11 +19,76 @@ Player::Player(Side playerSide) {
  */
 Player::~Player() {
     delete board;
-    for(int i = 0; i < 8; i++)
-    {
-		delete[] heu[i];
-	}
-	delete[] heu;
+}
+
+/*
+ * Return the heuristic score, given a board position.
+ */
+int Player::heuristics(Board *board) {
+    int score, cornerMultiplier;
+    
+    // basic score = difference in piece count
+    score = board->count(side) - board->count(other);
+    
+    // take into account the difference in corner piece count
+    int sideCorners = 0, otherCorners = 0;
+    for(int i = 0; i <= 7; i += 7) {
+        for(int j = 0; j <= 7; j += 7) {
+            if(board->get(side, i, j))
+                sideCorners++;
+            else if(board->get(other, i, j))
+                otherCorners++;
+        }
+    }
+    cornerMultiplier = 1000 * (sideCorners - otherCorners);
+    
+    return score + cornerMultiplier;
+}
+
+/*
+ * Returns the minimax score, given the board and a tree level.
+ */
+int Player::score(Board *board, int level) {
+    Side curr;
+    if(level % 2 == 0)
+        curr = side;
+    else
+        curr = other;
+    
+    std::vector<Move*> moves;
+    moves = board->getLegalMoves(curr);
+    
+    if(moves.size() == 0)
+        return heuristics(board);
+    
+    std::vector<int> scores;
+    for(int i = 0; i < (int) moves.size(); i++) {
+        int s = heuristics(board);
+        Board *boardCopy = board->copy();
+        boardCopy->doMove(moves[i], curr);
+        if(level < 2)
+            s = score(boardCopy, level + 1);
+        scores.push_back(s);
+    }
+    
+    //if level is even, return max of scores
+    if(level % 2 == 0) {
+        int max = 0;
+        for(int i = 0; i < (int) scores.size(); i++) {
+            if(scores[i] >= scores[max])
+                max = i;
+        }
+        return scores[max];
+    }
+    //if level is odd, return min of scores
+    else {
+        int min = 0;
+        for(int i = 0; i < (int) scores.size(); i++) {
+            if(scores[i] <= scores[min])
+                min = i;
+        }
+        return scores[min];
+    }
 }
 
 /*
@@ -91,90 +105,29 @@ Player::~Player() {
  * return nullptr.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
-	/*
-	//1st task: just make AI work
-    if(side == BLACK)
-        board->doMove(opponentsMove, WHITE);
-    else
-        board->doMove(opponentsMove, BLACK);
-    
-    std::vector<Move*> moves = getLegalMoves(side);
-    
-    if(moves.size() == 0)
-        return nullptr;
-    
-    int random = rand() % moves.size();
-    
-    board->doMove(moves[random], side);
-    return moves[random];
-    */
-    
-    //2nd task: make AI consistently beat SimplePlayer
-    /*
-    if(side == BLACK)
-        board->doMove(opponentsMove, WHITE);
-    else
-        board->doMove(opponentsMove, BLACK);
-    
-    std::vector<Move*> moves = getLegalMoves(side);
-    
-    if(moves.size() == 0)
-        return nullptr;
-    int max = 0;
-    for(int i = 0; i < (int) moves.size(); i++)
-    {
-		if(heu[moves[i]->getX()][moves[i]->getY()] >= heu[moves[max]->getX()][moves[max]->getY()])
-			max = i;
-	}
-	board->doMove(moves[max], side);
-	return moves[max];
-    */
-    
-    //3rd task: implement minimax algorithm
-    Side other = (side == BLACK) ? WHITE : BLACK;
     board->doMove(opponentsMove, other);
     
-    std::vector<Move*> moves = board->getLegalMoves(side);
-    
+    // get possible moves
+    std::vector<Move*> moves = board->getLegalMoves(side);    
     if(moves.size() == 0)
         return nullptr;
-
-    std::vector<double> minScores;
     
-    for(int i = 0; i < (int) moves.size(); i++)
-    {
-        // make move on a copy of the board
+    // get scores for each move
+    std::vector<int> scores;
+    for(int i = 0; i < (int) moves.size(); i++) {
         Board *boardCopy = board->copy();
         boardCopy->doMove(moves[i], side);
-        
-        double min = 0;
-        double minScore = std::numeric_limits<double>::infinity();
-        // loop through opponent's possible moves
-        std::vector<Move*> opponentMoves = boardCopy->getLegalMoves(other);
-        for(int j = 0; j < (int) opponentMoves.size(); j++)
-        {
-            Board *boardCopy2 = boardCopy->copy();
-            boardCopy2->doMove(opponentMoves[j], other);
-            double score = boardCopy2->count(side) - boardCopy2->count(other);
-            //score *= heu[moves[i]->getX()][moves[i]->getY()];
-            
-            if(score <= minScore)
-            {
-                min = j;
-                minScore = score;
-            }
-        }
-        
-        minScores.push_back(minScore);
-	}
-    
-    int minimax = 0;
-    for(int i = 0; i < (int) minScores.size(); i++)
-    {
-        if(minScores[i] >= minScores[minimax])
-            minimax = i;
+        scores.push_back(score(boardCopy, 1));
+        //scores.push_back(heuristics(boardCopy));
     }
     
-	board->doMove(moves[minimax], side);
-	return moves[minimax];
+    // find the move that maximizes score
+    int max = 0;
+    for(int i = 1; i < (int) moves.size(); i++) {
+        if(scores[i] >= scores[max])
+            max = i;
+    }
+    
+    board->doMove(moves[max], side);
+    return moves[max];
 }
