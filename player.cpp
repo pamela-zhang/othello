@@ -25,7 +25,7 @@ Player::~Player() {
  * Return the heuristic score, given a board position.
  */
 int Player::heuristics(Board *board) {
-    int score, cornerMultiplier, badCornerMultiplier;
+    int score, cornerMultiplier, badCornerMultiplier, edgeMultiplier;
     
     // basic score = difference in piece count
     score = board->count(side) - board->count(other);
@@ -36,6 +36,7 @@ int Player::heuristics(Board *board) {
     // take into account the difference in corner piece count
     int sideCorners = 0, otherCorners = 0;
     int sideBadCorners = 0, otherBadCorners = 0;
+    int sideEdges = 0, otherEdges = 0;
     for(int i = 0; i <= 7; i += 7) {
         for(int j = 0; j <= 7; j += 7) {
             if(board->get(side, i, j))
@@ -52,18 +53,19 @@ int Player::heuristics(Board *board) {
 				otherBadCorners++;
         }
     }
-    for(int i = 0; i < 8; i += 7) {
+    for(int i = 0; i <= 7 ; i += 7) {
         for(int j = 1; j <= 6; j += 5) {
             if(board->get(side, i, j))
-                sideBadCorners++;
+                sideEdges++;
             else if(board->get(other, i, j))
-				otherBadCorners++;
+				otherEdges++;
         }
     }
     
-    cornerMultiplier = 100 * (sideCorners - otherCorners);
+    cornerMultiplier = 1000 * (sideCorners - otherCorners);
 	badCornerMultiplier = (-1) * 50 * (sideBadCorners - otherBadCorners);
-    return score + cornerMultiplier + badCornerMultiplier;
+	edgeMultiplier = 20 * (sideEdges - otherEdges);
+    return score + cornerMultiplier + badCornerMultiplier + edgeMultiplier;
 }
 
 /*
