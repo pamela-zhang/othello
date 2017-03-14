@@ -87,7 +87,7 @@ int Player::score(Board *board, int level) {
         int s = heuristics(board);
         Board *boardCopy = board->copy();
         boardCopy->doMove(moves[i], curr);
-        if(level < 3)
+        if(level < 4)
             s = score(boardCopy, level + 1);
         scores.push_back(s);
     }
