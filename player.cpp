@@ -53,8 +53,16 @@ int Player::heuristics(Board *board) {
 				otherBadCorners++;
         }
     }
-    for(int i = 0; i <= 7 ; i += 7) {
-        for(int j = 1; j <= 6; j += 5) {
+    for(int i = 0; i <= 7; i += 7) {
+        for(int j = 2; j <= 5; j++) {
+            if(board->get(side, i, j))
+                sideEdges++;
+            else if(board->get(other, i, j))
+				otherEdges++;
+        }
+    }
+    for(int i = 2; i <= 5; i++) {
+        for(int j = 0; j <= 7; j += 7) {
             if(board->get(side, i, j))
                 sideEdges++;
             else if(board->get(other, i, j))
@@ -62,7 +70,7 @@ int Player::heuristics(Board *board) {
         }
     }
     
-    cornerMultiplier = 1000 * (sideCorners - otherCorners);
+    cornerMultiplier = 2000 * (sideCorners - otherCorners);
 	badCornerMultiplier = (-1) * 50 * (sideBadCorners - otherBadCorners);
 	edgeMultiplier = 20 * (sideEdges - otherEdges);
     return score + cornerMultiplier + badCornerMultiplier + edgeMultiplier;
